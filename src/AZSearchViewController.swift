@@ -52,7 +52,7 @@ public protocol AZSearchViewDelegate{
     /// - parameter searchView: Is the current instance of AZSearchViewController.
     /// - parameter index: Is the index of the item that was selected.
     /// - parameter text: Is the text of the selected result. Note that this is fetched from the data source, so if the data source function `results()` has changed it's data set this will return the new data.
-    func searchView(_ searchView: AZSearchViewController, didSelectResultAt index: Int,text: String)
+    func searchView(_ searchView: UITableView, didSelectResultAt indexPath: IndexPath, object: AnyObject)
     
     /// Called when controller has been dismissed.
     ///
@@ -87,7 +87,7 @@ public extension AZSearchViewDelegate{
 public protocol AZSearchViewDataSource {
     ///results is called whenever the UITableView's data source functions `cellForRowAt` and `numberOfRowsInSection` and when calling `reloadData()` on an instance of `AZSearchViewController`.
     /// - returns: An array of strings which are displayed as a auto-complete suggestion.
-    func results()->[String]
+    func results()->[AnyObject]
     
     ///Optional function, override if you wish to dequeue a custom cell class.
     func searchView(_ searchView: AZSearchViewController, tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
@@ -103,12 +103,7 @@ public protocol AZSearchViewDataSource {
 
 //This extension is used to make the function optional
 public extension AZSearchViewDataSource {
-    func searchView(_ searchView: AZSearchViewController,tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell{
-        let cell = tableView.dequeueReusableCell(withIdentifier: searchView.cellIdentifier)
-        cell?.textLabel?.text = results()[indexPath.row]
-        return cell!
-    }
-    
+
     func searchView(_ searchView: AZSearchViewController,tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return false
     }
@@ -134,6 +129,8 @@ public class AZSearchViewController: UIViewController{
     open var dataSource: AZSearchViewDataSource?
     
     open var navigationBarClosure: ((UINavigationBar)->Void)?
+    
+    open var cellNibName: String?
     
     ///The search bar offset
     internal var searchBarOffset: UIOffset{
@@ -184,6 +181,12 @@ public class AZSearchViewController: UIViewController{
         }
     }
     
+    open var tableViewBackgroundColor: UIColor = UIColor.white {
+        didSet{
+            self.tableView.backgroundColor = tableViewBackgroundColor
+        }
+    }
+    
     ///A var to modify the separator offset
     open var separatorInset: UIEdgeInsets = UIEdgeInsets.zero{
         didSet{
@@ -212,10 +215,17 @@ public class AZSearchViewController: UIViewController{
         self.init(nibName: nil, bundle: nil)
     }
     
-    convenience init(cellReuseIdentifier cellId: String,cellReuseClass: AnyClass){
+    public convenience init(cellReuseIdentifier cellId: String,cellReuseClass: AnyClass){
         self.init()
         self.cellIdentifier = cellId
         self.cellClass = cellReuseClass
+        
+    }
+    
+    public convenience init(cellReuseIdentifier cellId: String, cellNibName: String){
+        self.init()
+        self.cellIdentifier = cellId
+        self.cellNibName = cellNibName
         
     }
     
@@ -270,7 +280,12 @@ public class AZSearchViewController: UIViewController{
         self.view.backgroundColor = AZSearchViewDefaults.backgroundColor
         
         //setup tableview
-        self.tableView.register(self.cellClass, forCellReuseIdentifier: self.cellIdentifier)
+        if let cellNibName = self.cellNibName {
+            self.tableView.register(UINib(nibName: cellNibName, bundle: Bundle.main), forCellReuseIdentifier: self.cellIdentifier)
+        } else {
+            self.tableView.register(self.cellClass, forCellReuseIdentifier: self.cellIdentifier)
+        }
+//        self.tableView.backgroundColor = tableViewBackgroundColor
         self.tableView.tableFooterView = UIView()
         self.tableView.isHidden = true
         self.tableView.delegate = self
@@ -360,7 +375,7 @@ extension AZSearchViewController: UIGestureRecognizerDelegate{
 
 extension AZSearchViewController: UITableViewDelegate{
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        self.delegate?.searchView(self, didSelectResultAt: indexPath.row, text: dataSource?.results()[indexPath.row] ?? "")
+        self.delegate?.searchView(tableView, didSelectResultAt: indexPath, object: (dataSource?.results()[indexPath.row])!)
         self.tableView.deselectRow(at: indexPath, animated: true)
     }
     

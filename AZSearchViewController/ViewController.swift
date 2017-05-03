@@ -99,9 +99,9 @@ extension ViewController: AZSearchViewDelegate{
         searchView.reloadData()
     }
     
-    func searchView(_ searchView: AZSearchViewController, didSelectResultAt index: Int, text: String) {
+    func searchView(_ searchView: UITableView, didSelectResultAt indexPath: IndexPath, object: AnyObject) {
         self.searchController.dismiss(animated: true, completion: {
-            self.pushWithTitle(text: text)
+            self.pushWithTitle(text: object as! String)
         })
     }
     
@@ -116,8 +116,8 @@ extension ViewController: AZSearchViewDataSource{
         return .lightContent
     }
     
-    func results() -> [String] {
-        return self.resultArray
+    func results() -> [AnyObject] {
+        return self.resultArray as [AnyObject]
     }
     
     func searchView(_ searchView: AZSearchViewController, tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

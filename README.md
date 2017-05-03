@@ -34,7 +34,7 @@ extension ViewController: AZSearchViewDelegate{
         searchView.reloadData()
     }
     
-    func searchView(_ searchView: AZSearchViewController, didSelectResultAt index: Int, text: String) {
+    func searchView(_ searchView: AZSearchViewController, didSelectResultAt index: Int, object: AnyObject) {
         searchView.dismiss(animated: true, completion: {
             self.pushWithTitle(text: text)
         })
@@ -43,8 +43,8 @@ extension ViewController: AZSearchViewDelegate{
 
 extension ViewController: AZSearchViewDataSource{
     
-    func results() -> [String] {
-        return self.resultArray
+    func results() -> [AnyObject] {
+        return self.resultArray as [AnyObject]
     }
 }
 ```
