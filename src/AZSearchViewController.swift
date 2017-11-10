@@ -15,9 +15,9 @@ public struct AZSearchViewDefaults{
     
     static let reuseIdetentifer = "cell"
     
-    static let backgroundColor: UIColor = UIColor(colorLiteralRed: 0.0, green: 0.0, blue: 0.0, alpha: 0.6)
+    static let backgroundColor: UIColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.6)
     
-    static let searchBarColor: UIColor = UIColor(colorLiteralRed: 0.86, green: 0.86, blue: 0.86, alpha: 1)
+    static let searchBarColor: UIColor = UIColor(red: 0.86, green: 0.86, blue: 0.86, alpha: 1)
     
     static let searchBarPortraitHeight:CGFloat = 64
     
@@ -338,17 +338,17 @@ public class AZSearchViewController: UIViewController{
     
     //MARK: - Selectors
     
-    func didTapBackground(sender: AnyObject?){
+    @objc func didTapBackground(sender: AnyObject?){
         self.dismiss(animated: true, completion: nil)
     }
     
-    func keyboardWillShow(notification: NSNotification) {
+    @objc func keyboardWillShow(notification: NSNotification) {
         guard let kbSizeValue = notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue else { return }
         guard let kbDurationNumber = notification.userInfo?[UIKeyboardAnimationDurationUserInfoKey] as? NSNumber else { return }
         animateToKeyboardHeight(kbHeight: kbSizeValue.cgRectValue.height, duration: kbDurationNumber.doubleValue)
     }
     
-    func keyboardWillHide(notification: NSNotification) {
+    @objc func keyboardWillHide(notification: NSNotification) {
         guard let kbDurationNumber = notification.userInfo?[UIKeyboardAnimationDurationUserInfoKey] as? NSNumber else { return }
         animateToKeyboardHeight(kbHeight: 0, duration: kbDurationNumber.doubleValue)
     }
@@ -415,7 +415,7 @@ extension AZSearchViewController: UITableViewDataSource{
 extension AZSearchViewController: UISearchBarDelegate{
     
     public func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        self.delegate?.searchView(self, didTextChangeTo: searchBar.text!, textLength: searchBar.text!.characters.count)
+        self.delegate?.searchView(self, didTextChangeTo: searchBar.text!, textLength: searchBar.text!.count)
     }
     
     public func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
