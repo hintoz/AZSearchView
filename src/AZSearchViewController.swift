@@ -30,6 +30,14 @@ public struct AZSearchViewDefaults{
     static let animationDuration = 0.3
     
     static let cellHeight:CGFloat = 44
+    
+    static let emptyResultCellTextColor = UIColor.black
+    
+    static let emptyResultCellText = "No results"
+    
+    static let infoCellText = "Enter text in the field above"
+    
+    static let minimalCharactersForSearch: Int = 0
 }
 
 
@@ -150,6 +158,14 @@ public class AZSearchViewController: UIViewController{
         }
     }
     
+    open var searchBarTextColor: UIColor = UIColor.black {
+        didSet{
+            if searchBar != nil, let searchField = searchBar.value(forKey: "searchField"){
+                (searchField as! UITextField).textColor = searchBarTextColor
+            }
+        }
+    }
+    
     open var keyboardAppearnce: UIKeyboardAppearance = .default {
         didSet{
             self.searchBar.keyboardAppearance = keyboardAppearnce
@@ -174,6 +190,14 @@ public class AZSearchViewController: UIViewController{
         }
     }
     
+    open var emptyResultCellTextColor: UIColor = AZSearchViewDefaults.emptyResultCellTextColor
+    
+    open var emptyResultCellText: String = AZSearchViewDefaults.emptyResultCellText
+    
+    open var infoCellText: String = AZSearchViewDefaults.infoCellText
+    
+    open var minimalCharactersForSearch: Int = AZSearchViewDefaults.minimalCharactersForSearch
+    
     ///A var to change the separator color
     open var separatorColor: UIColor = UIColor.lightGray{
         didSet{
@@ -184,6 +208,12 @@ public class AZSearchViewController: UIViewController{
     open var tableViewBackgroundColor: UIColor = UIColor.white {
         didSet{
             self.tableView.backgroundColor = tableViewBackgroundColor
+        }
+    }
+    
+    open var tableViewBackgroundView: UIView? {
+        didSet{
+            self.tableView.backgroundView = tableViewBackgroundView
         }
     }
     
@@ -285,9 +315,9 @@ public class AZSearchViewController: UIViewController{
         } else {
             self.tableView.register(self.cellClass, forCellReuseIdentifier: self.cellIdentifier)
         }
-//        self.tableView.backgroundColor = tableViewBackgroundColor
+        self.tableView.backgroundColor = tableViewBackgroundColor
         self.tableView.tableFooterView = UIView()
-        self.tableView.isHidden = true
+//        self.tableView.isHidden = true
         self.tableView.delegate = self
         self.tableView.dataSource = self
         
@@ -328,11 +358,11 @@ public class AZSearchViewController: UIViewController{
     
     ///reloadData - refreshes the UITableView. If the data source function `results()` contains 0 index, the table view will be hidden.
     open func reloadData(){
-        if (self.dataSource?.results().count ?? 0) > 0 {
-            tableView.isHidden = false
-        }else{
-            tableView.isHidden = true
-        }
+//        if (self.dataSource?.results().count ?? 0) > 0 {
+//            tableView.isHidden = false
+//        }else{
+//            tableView.isHidden = true
+//        }
         self.tableView.reloadData()
     }
     
@@ -384,7 +414,11 @@ extension AZSearchViewController: UITableViewDelegate{
     }
     
     public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return self.delegate?.searchView(self, tableView: tableView, heightForRowAt: indexPath) ?? 0
+        if let results = self.dataSource?.results(), results.count > 0 {
+            return self.delegate?.searchView(self, tableView: tableView, heightForRowAt: indexPath) ?? 0
+        } else {
+            return AZSearchViewDefaults.cellHeight
+        }
     }
     
 }
@@ -393,11 +427,28 @@ extension AZSearchViewController: UITableViewDelegate{
 
 extension AZSearchViewController: UITableViewDataSource{
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.dataSource?.results().count ?? 0
+//        return self.dataSource?.results().count ?? 0
+        if let results = self.dataSource?.results(), results.count > 0 {
+            tableView.separatorStyle = .singleLine
+            return results.count
+        } else {
+            tableView.separatorStyle = .none
+            return 1
+        }
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return self.dataSource?.searchView(self,tableView: tableView, cellForRowAt: indexPath) ?? UITableViewCell()
+//        return self.dataSource?.searchView(self,tableView: tableView, cellForRowAt: indexPath) ?? UITableViewCell()
+        if let results = self.dataSource?.results(), results.count > 0, let dataSource = self.dataSource {
+            return dataSource.searchView(self,tableView: tableView, cellForRowAt: indexPath)
+        } else {
+            let cell = UITableViewCell()
+            cell.textLabel?.text = searchBar.text!.count > minimalCharactersForSearch ? emptyResultCellText : infoCellText
+            cell.textLabel?.textColor = emptyResultCellTextColor
+            cell.backgroundColor = .clear
+            cell.isUserInteractionEnabled = false
+            return cell
+        }
     }
     
     public func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
